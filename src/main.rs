@@ -4,7 +4,7 @@ use std::net::SocketAddr;
 use clap::{App, Arg};
 use hyper::server::conn::AddrStream;
 
-fn parse_cli_arguments() -> (String) {
+fn parse_cli_arguments() -> String {
     let matches = App::new("http_server")
         .version("0.1.0")
         .author("domichain")
@@ -26,21 +26,21 @@ fn parse_cli_arguments() -> (String) {
 
 async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Error> {
     // Print the details of the request
-    println!("Received request: {:?}", req);
+   // println!("Received request: {:?}", req);
     let body = req.into_body();
-    println!("body {:?}", body);
+   // println!("body {:?}", body);
     let full_body = hyper::body::to_bytes(body).await?;
 
     // Convert the body bytes to a string
     let body_str = String::from_utf8_lossy(&full_body).to_string();
 
-    println!("Body {:?}", body_str);
+   // println!("Body {:?}", body_str);
 
     // Create a response
     let response = Response::new(Body::from("Hello, World!"));
 
     // Print the details of the response
-    println!("Sending response: {:?}", response);
+   // println!("Sending response: {:?}", response);
 
     Ok(response)
 }
@@ -49,7 +49,16 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, hyper::Err
 #[tokio::main]
 async fn main() {
     // Define the address on which the server will listen
-    let addr = parse_cli_arguments()
+    let server_addr = parse_cli_arguments();
+
+    let addr = match server_addr.parse::<SocketAddr>() {
+        Ok(addr) => addr,
+        Err(e) => {
+            eprintln!("Error parsing SocketAddr: {}", e);
+            // Handle the error case accordingly (e.g., using a default address or terminating the program)
+            return;
+        }
+    };
 
     // Create a new `Service` to handle incoming requests
     let make_svc = make_service_fn(|_conn: &AddrStream| {
